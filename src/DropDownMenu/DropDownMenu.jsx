@@ -94,6 +94,12 @@ const DropDownMenu = React.createClass({
      * The value that is currently selected.
      */
     value: React.PropTypes.any,
+
+    /**
+      * If true, `value` must be an array and the menu will support
+      * multiple selections.
+      */
+   multiple: PropTypes.bool,
   },
 
   contextTypes: {
@@ -109,6 +115,7 @@ const DropDownMenu = React.createClass({
     return {
       autoWidth: true,
       disabled: false,
+      multiple: false,
       openImmediately: false,
       maxHeight: 500,
     };
@@ -242,9 +249,11 @@ const DropDownMenu = React.createClass({
   _onMenuItemTouchTap(key, payload, event) {
     this.props.onChange(event, key, payload);
 
-    this.setState({
-      open: false,
-    });
+    if (!this.props.multiple) {
+      this.setState({
+        open: false,
+      });
+    }
   },
 
   handleRequestCloseMenu() {
@@ -283,10 +292,19 @@ const DropDownMenu = React.createClass({
     const styles = this.getStyles();
 
     let displayValue = '';
+    const displayValueArray = [];
+
     React.Children.forEach(children, (child) => {
-      if (value === child.props.value) {
-        // This will need to be improved (in case primaryText is a node)
-        displayValue = child.props.label || child.props.primaryText;
+      if (!this.props.multiple) {
+        if (value === child.props.value) {
+          // This will need to be improved (in case primaryText is a node)
+          displayValue = child.props.label || child.props.primaryText;
+        }
+      } else {
+        if (value.indexOf(child.props.value) !== -1) {
+          displayValueArray.push(child.props.label || child.props.primaryText);
+          displayValue = displayValueArray.join(', ');
+        }
       }
     });
 
@@ -331,6 +349,7 @@ const DropDownMenu = React.createClass({
             value={value}
             style={menuStyle}
             listStyle={listStyle}
+            multiple={this.props.multiple}
           >
             {menuItemElements}
           </Menu>
